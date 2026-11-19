@@ -270,6 +270,7 @@
         <div class="model-selector">
             <button class="selector-btn active" id="btn-robot" onclick="setModel('robot')">🤖 Cyber Bot</button>
             <button class="selector-btn" id="btn-astro" onclick="setModel('astro')">🧑‍🚀 Astronaut</button>
+            <a href="vision_pro.html" class="selector-btn" style="text-decoration:none; color:#00d4ff; font-weight:700;">🥽 Vision Pro</a>
         </div>
     </header>
 
@@ -285,6 +286,7 @@
     <model-viewer
         id="viewer"
         src="robot.glb"
+        ios-src="robot_anim.usdz"
         ar
         ar-modes="webxr scene-viewer quick-look"
         ar-scale="auto"
