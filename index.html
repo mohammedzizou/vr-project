@@ -1,273 +1,455 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Solar System Demo</title>
-    <!-- A-Frame library for 3D rendering -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Next-Gen WebAR Educational Experience</title>
+    <!-- A-Frame 1.4.0 -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <!-- AR.js for augmented reality -->
+    <!-- AR.js for A-Frame -->
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    
     <style>
-        /* Hide the video feed info message */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #000;
+        }
         .a-enter-vr { display: none !important; }
-        
-        /* Loading overlay */
-        #loading-overlay {
+
+        /* HUD Glassmorphism Overlay */
+        #hud {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 10, 30, 0.95);
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 16px;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto;
+        }
+        .hud-badge {
+            background: rgba(10, 20, 50, 0.75);
+            border: 1px solid rgba(0, 212, 255, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 8px 14px;
+            border-radius: 20px;
+            color: #00d4ff;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.2);
+        }
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #ff4757;
+            box-shadow: 0 0 10px #ff4757;
+            transition: all 0.3s ease;
+        }
+        .status-dot.active {
+            background: #00e696;
+            box-shadow: 0 0 12px #00e696;
+        }
+
+        /* Mode Selector */
+        .mode-selector {
+            background: rgba(10, 20, 50, 0.85);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 30px;
+            display: flex;
+            padding: 4px;
+            gap: 4px;
+            pointer-events: auto;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+        }
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: #bcd;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #00d4ff, #387aff);
+            color: #050b1e;
+            font-weight: 700;
+            box-shadow: 0 2px 12px rgba(0, 212, 255, 0.4);
+        }
+
+        /* Bottom Controls Bar */
+        .bottom-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            pointer-events: auto;
+        }
+        .control-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .chip-btn {
+            background: rgba(15, 25, 60, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .chip-btn:active, .chip-btn.active {
+            border-color: #00d4ff;
+            color: #00d4ff;
+            background: rgba(0, 212, 255, 0.15);
+        }
+
+        /* Info Popup Card */
+        #info-card {
+            background: rgba(8, 16, 42, 0.92);
+            border: 1px solid rgba(0, 212, 255, 0.4);
+            border-left: 4px solid #00d4ff;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            padding: 12px 18px;
+            border-radius: 12px;
+            color: white;
+            width: 90%;
+            max-width: 360px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 1;
+        }
+        #info-card h3 {
+            margin: 0 0 4px 0;
+            font-size: 15px;
+            color: #00d4ff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #info-card p {
+            margin: 0;
+            font-size: 11.5px;
+            line-height: 1.45;
+            color: #ccddee;
+        }
+
+        /* Marker Detection Guidance Box */
+        #scanner-hint {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+            border: 2px dashed rgba(0, 212, 255, 0.5);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            z-index: 50;
+            transition: opacity 0.4s ease;
+            text-align: center;
+            padding: 16px;
+        }
+        #scanner-hint.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        #scanner-hint span {
+            color: #00d4ff;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(5, 12, 35, 0.85);
+            padding: 6px 12px;
+            border-radius: 10px;
+            margin-top: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        /* Loading Screen */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #060b1c;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            font-family: 'Segoe UI', Arial, sans-serif;
             color: white;
-            transition: opacity 0.5s;
+            transition: opacity 0.6s ease;
         }
-        #loading-overlay h1 {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-            color: #00d4ff;
-        }
-        #loading-overlay p {
-            font-size: 1em;
-            opacity: 0.8;
-            text-align: center;
-            padding: 0 20px;
-            line-height: 1.6;
-        }
-        #loading-overlay .spinner {
-            width: 50px; height: 50px;
-            border: 4px solid rgba(0,212,255,0.2);
-            border-top: 4px solid #00d4ff;
+        .spinner {
+            width: 55px; height: 55px;
+            border: 3px solid rgba(0, 212, 255, 0.15);
+            border-top: 3px solid #00d4ff;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
             margin-bottom: 20px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body style="margin: 0; overflow: hidden;">
+<body>
 
-    <!-- Loading screen -->
-    <div id="loading-overlay">
+    <!-- Loading Screen -->
+    <div id="loader">
         <div class="spinner"></div>
-        <h1>🌍 AR Solar System</h1>
-        <p>Loading camera...<br>
-           Point your camera at the <strong>Hiro marker</strong><br>
-           to see the solar system appear!</p>
+        <h2 style="color: #00d4ff; margin: 0 0 8px 0; font-size: 20px;">AUGMENTED REALITY</h2>
+        <p style="color: #9ab; font-size: 13px; margin: 0;">Initializing Camera & 3D Tracking...</p>
     </div>
 
-    <!-- AR Scene -->
+    <!-- Scanner Target Guide -->
+    <div id="scanner-hint">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="1.8">
+            <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/>
+            <circle cx="12" cy="12" r="3" fill="#00d4ff" fill-opacity="0.3"/>
+        </svg>
+        <span>POINT CAMERA AT HIRO MARKER</span>
+    </div>
+
+    <!-- Glassmorphism Interactive HUD -->
+    <div id="hud">
+        <!-- Top bar -->
+        <div class="top-bar">
+            <div class="hud-badge">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="status-text">LOOKING FOR MARKER</span>
+            </div>
+            
+            <div class="mode-selector">
+                <button class="mode-btn active" id="btn-solar" onclick="switchMode('solar')">🪐 Space</button>
+                <button class="mode-btn" id="btn-heart" onclick="switchMode('heart')">🫀 Anatomy</button>
+                <button class="mode-btn" id="btn-cyber" onclick="switchMode('cyber')">🌐 Cyber</button>
+            </div>
+        </div>
+
+        <!-- Bottom bar -->
+        <div class="bottom-bar">
+            <!-- Dynamic Info Card -->
+            <div id="info-card">
+                <h3 id="card-title">3D Solar System (Active)</h3>
+                <p id="card-desc">Real-time AR marker tracking. Sun, 8 planets with visible orbital paths, and the Moon orbiting Earth in dynamic 3D.</p>
+            </div>
+
+            <!-- Interactive Chips -->
+            <div class="control-chips">
+                <button class="chip-btn active" id="btn-speed" onclick="toggleSpeed()">⚡ Speed: 1x</button>
+                <button class="chip-btn" id="btn-sound" onclick="toggleSound()">🔊 Audio: ON</button>
+                <button class="chip-btn" id="btn-freeze" onclick="toggleFreeze()">⏸️ Pause</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- A-Frame AR Scene -->
     <a-scene
         embedded
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-        renderer="logarithmicDepthBuffer: true; antialias: true;"
+        renderer="logarithmicDepthBuffer: true; antialias: true; colorManagement: true;"
         vr-mode-ui="enabled: false"
     >
-        <!-- AR Marker (Hiro - standard marker) -->
-        <a-marker preset="hiro">
+        <!-- Marker: Hiro -->
+        <a-marker id="hiro-marker" preset="hiro">
 
-            <!-- ☀️ Sun - center -->
-            <a-sphere
-                position="0 0.5 0"
-                radius="0.3"
-                color="#FDB813"
-                material="emissive: #FDB813; emissiveIntensity: 0.8"
-            >
-                <a-animation
-                    attribute="rotation"
-                    dur="10000"
-                    to="0 360 0"
-                    repeat="indefinite"
-                    easing="linear"
-                ></a-animation>
-            </a-sphere>
-
-            <!-- 🪨 Mercury - orbit 1 -->
-            <a-entity
-                position="0 0.5 0"
-            >
-                <a-animation
-                    attribute="rotation"
-                    dur="4000"
-                    to="0 360 0"
-                    repeat="indefinite"
-                    easing="linear"
-                ></a-animation>
+            <!-- ======================================================== -->
+            <!-- 🪐 MODEL 1: ANIMATED SOLAR SYSTEM WITH ORBITAL TRACKS    -->
+            <!-- ======================================================== -->
+            <a-entity id="scene-solar" position="0 0 0" scale="0.85 0.85 0.85">
+                
+                <!-- ☀️ Pulsing glowing Sun -->
                 <a-sphere
-                    position="0.5 0 0"
-                    radius="0.04"
-                    color="#A0522D"
+                    position="0 0.5 0"
+                    radius="0.32"
+                    color="#FFB300"
+                    material="shader: standard; emissive: #FF9100; emissiveIntensity: 1.2; roughness: 0.2"
+                    animation__spin="property: rotation; to: 0 360 0; loop: true; dur: 12000; easing: linear"
+                    animation__pulse="property: scale; dir: alternate; dur: 1200; to: 1.08 1.08 1.08; loop: true; easing: easeInOutSine"
                 ></a-sphere>
-            </a-entity>
 
-            <!-- 🌕 Venus - orbit 2 -->
-            <a-entity
-                position="0 0.5 0"
-            >
-                <a-animation
-                    attribute="rotation"
-                    dur="6500"
-                    to="0 360 0"
-                    repeat="indefinite"
-                    easing="linear"
-                ></a-animation>
+                <!-- Sun Corona Glow Shell -->
                 <a-sphere
-                    position="0.7 0 0"
-                    radius="0.06"
-                    color="#DEB887"
+                    position="0 0.5 0"
+                    radius="0.42"
+                    material="color: #FFD54F; opacity: 0.22; transparent: true; side: back"
+                    animation__pulse="property: scale; dir: alternate; dur: 900; to: 1.15 1.15 1.15; loop: true; easing: easeInOutSine"
                 ></a-sphere>
-            </a-entity>
 
-            <!-- 🌍 Earth - orbit 3 -->
-            <a-entity
-                position="0 0.5 0"
-            >
-                <a-animation
-                    attribute="rotation"
-                    dur="8000"
-                    to="0 360 0"
-                    repeat="indefinite"
-                    easing="linear"
-                ></a-animation>
-                <a-sphere
-                    position="0.95 0 0"
-                    radius="0.07"
-                    color="#4169E1"
-                >
-                    <!-- 🌙 Moon orbiting Earth -->
-                    <a-entity>
-                        <a-animation
-                            attribute="rotation"
-                            dur="3000"
-                            to="0 360 0"
-                            repeat="indefinite"
-                            easing="linear"
-                        ></a-animation>
-                        <a-sphere
-                            position="0.12 0 0"
-                            radius="0.02"
-                            color="#C0C0C0"
-                        ></a-sphere>
-                    </a-entity>
-                </a-sphere>
-            </a-entity>
+                <!-- Point light from Sun -->
+                <a-light type="point" position="0 0.5 0" intensity="2" color="#FFE082" distance="6"></a-light>
 
-            <!-- 🔴 Mars - orbit 4 -->
-            <a-entity
-                position="0 0.5 0"
-            >
-                <a-animation
-                    attribute="rotation"
-                    dur="11000"
-                    to="0 360 0"
-                    repeat="indefinite"
-                    easing="linear"
-                ></a-animation>
-                <a-sphere
-                    position="1.2 0 0"
-                    radius="0.055"
-                    color="#CD5C5C"
-                ></a-sphere>
-            </a-entity>
-
-            <!-- 🟠 Jupiter - orbit 5 -->
-            <a-entity
-                position="0 0.5 0"
-            >
-                <a-animation
-                    attribute="rotation"
-                    dur="16000"
-                    to="0 360 0"
-                    repeat="indefinite"
-                    easing="linear"
-                ></a-animation>
-                <a-sphere
-                    position="1.55 0 0"
-                    radius="0.15"
-                    color="#DAA520"
-                ></a-sphere>
-            </a-entity>
-
-            <!-- 🪐 Saturn - orbit 6 (with ring) -->
-            <a-entity
-                position="0 0.5 0"
-            >
-                <a-animation
-                    attribute="rotation"
-                    dur="20000"
-                    to="0 360 0"
-                    repeat="indefinite"
-                    easing="linear"
-                ></a-animation>
-                <a-entity position="1.9 0 0">
-                    <a-sphere
-                        radius="0.12"
-                        color="#F4A460"
-                    ></a-sphere>
-                    <!-- Saturn's ring -->
-                    <a-torus
-                        radius="0.2"
-                        radius-tubular="0.01"
-                        rotation="90 0 0"
-                        color="#D2B48C"
-                        material="opacity: 0.6; transparent: true"
-                    ></a-torus>
+                <!-- 1. Mercury -->
+                <a-ring rotation="-90 0 0" position="0 0.5 0" radius-inner="0.59" radius-outer="0.61" material="color: #00d4ff; opacity: 0.25; transparent: true"></a-ring>
+                <a-entity position="0 0.5 0" class="orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 3200; easing: linear">
+                    <a-sphere position="0.6 0 0" radius="0.04" color="#A0522D" material="roughness: 0.8"></a-sphere>
                 </a-entity>
+
+                <!-- 2. Venus -->
+                <a-ring rotation="-90 0 0" position="0 0.5 0" radius-inner="0.79" radius-outer="0.81" material="color: #00d4ff; opacity: 0.25; transparent: true"></a-ring>
+                <a-entity position="0 0.5 0" class="orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 5400; easing: linear">
+                    <a-sphere position="0.8 0 0" radius="0.065" color="#E6C280" material="roughness: 0.5"></a-sphere>
+                </a-entity>
+
+                <!-- 3. Earth + Orbiting Moon -->
+                <a-ring rotation="-90 0 0" position="0 0.5 0" radius-inner="1.04" radius-outer="1.06" material="color: #00e696; opacity: 0.35; transparent: true"></a-ring>
+                <a-entity position="0 0.5 0" class="orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 7500; easing: linear">
+                    <a-entity position="1.05 0 0">
+                        <!-- Earth -->
+                        <a-sphere
+                            radius="0.08"
+                            color="#2E86DE"
+                            material="emissive: #0984E3; emissiveIntensity: 0.3; roughness: 0.4"
+                            animation="property: rotation; to: 0 360 0; loop: true; dur: 2000; easing: linear"
+                        ></a-sphere>
+                        <!-- Moon orbit -->
+                        <a-entity class="orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 1800; easing: linear">
+                            <a-sphere position="0.16 0 0" radius="0.022" color="#ECEFF1"></a-sphere>
+                        </a-entity>
+                    </a-entity>
+                </a-entity>
+
+                <!-- 4. Mars -->
+                <a-ring rotation="-90 0 0" position="0 0.5 0" radius-inner="1.34" radius-outer="1.36" material="color: #00d4ff; opacity: 0.25; transparent: true"></a-ring>
+                <a-entity position="0 0.5 0" class="orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 9500; easing: linear">
+                    <a-sphere position="1.35 0 0" radius="0.055" color="#FF7675" material="roughness: 0.7"></a-sphere>
+                </a-entity>
+
+                <!-- 5. Jupiter -->
+                <a-ring rotation="-90 0 0" position="0 0.5 0" radius-inner="1.69" radius-outer="1.71" material="color: #00d4ff; opacity: 0.25; transparent: true"></a-ring>
+                <a-entity position="0 0.5 0" class="orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 14000; easing: linear">
+                    <a-sphere position="1.7 0 0" radius="0.14" color="#E1B12C" material="roughness: 0.6"></a-sphere>
+                </a-entity>
+
+                <!-- 6. Saturn + Ring -->
+                <a-ring rotation="-90 0 0" position="0 0.5 0" radius-inner="2.09" radius-outer="2.11" material="color: #00d4ff; opacity: 0.25; transparent: true"></a-ring>
+                <a-entity position="0 0.5 0" class="orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 18000; easing: linear">
+                    <a-entity position="2.1 0 0" rotation="20 0 15">
+                        <a-sphere radius="0.11" color="#FAD390" material="roughness: 0.6"></a-sphere>
+                        <!-- Saturn's Planetary Ring -->
+                        <a-ring rotation="-90 0 0" radius-inner="0.15" radius-outer="0.25" material="color: #D2B48C; opacity: 0.75; transparent: true; side: double"></a-ring>
+                    </a-entity>
+                </a-entity>
+
+                <!-- 7. Uranus -->
+                <a-ring rotation="-90 0 0" position="0 0.5 0" radius-inner="2.44" radius-outer="2.46" material="color: #00d4ff; opacity: 0.25; transparent: true"></a-ring>
+                <a-entity position="0 0.5 0" class="orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 23000; easing: linear">
+                    <a-sphere position="2.45 0 0" radius="0.08" color="#74B9FF" material="roughness: 0.3"></a-sphere>
+                </a-entity>
+
+                <!-- 8. Neptune -->
+                <a-ring rotation="-90 0 0" position="0 0.5 0" radius-inner="2.79" radius-outer="2.81" material="color: #00d4ff; opacity: 0.25; transparent: true"></a-ring>
+                <a-entity position="0 0.5 0" class="orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 28000; easing: linear">
+                    <a-sphere position="2.8 0 0" radius="0.075" color="#0984E3" material="roughness: 0.3"></a-sphere>
+                </a-entity>
+
             </a-entity>
 
-            <!-- 💎 Uranus - orbit 7 -->
-            <a-entity
-                position="0 0.5 0"
-            >
-                <a-animation
-                    attribute="rotation"
-                    dur="25000"
-                    to="0 360 0"
-                    repeat="indefinite"
-                    easing="linear"
-                ></a-animation>
+
+            <!-- ======================================================== -->
+            <!-- 🫀 MODEL 2: MEDICAL AR — PULSING 3D BEATING HEART         -->
+            <!-- ======================================================== -->
+            <a-entity id="scene-heart" visible="false" position="0 0.6 0">
+                
+                <!-- Main beating Heart complex -->
+                <a-entity
+                    animation__beat="property: scale; dir: alternate; dur: 450; to: 1.18 1.18 1.18; loop: true; easing: easeInOutElastic"
+                    animation__float="property: position; dir: alternate; dur: 1800; to: 0 0.8 0; loop: true; easing: easeInOutQuad"
+                >
+                    <!-- Left Ventricle / Chamber -->
+                    <a-sphere position="-0.15 0 0" radius="0.28" color="#D63031" material="roughness: 0.3; metalness: 0.1; emissive: #B71540; emissiveIntensity: 0.3"></a-sphere>
+                    <!-- Right Ventricle / Chamber -->
+                    <a-sphere position="0.15 0 0" radius="0.28" color="#E55039" material="roughness: 0.3; metalness: 0.1; emissive: #B71540; emissiveIntensity: 0.3"></a-sphere>
+                    <!-- Lower Apex -->
+                    <a-cone position="0 -0.25 0" rotation="180 0 0" radius-bottom="0.29" height="0.45" color="#C0392B"></a-cone>
+
+                    <!-- Aorta (Major Artery) -->
+                    <a-torus position="0 0.28 0" rotation="0 0 -30" radius="0.18" radius-tubular="0.06" arc="180" color="#E74C3C" material="emissive: #C0392B; emissiveIntensity: 0.4"></a-torus>
+                    <!-- Pulmonary Artery (Blue) -->
+                    <a-cylinder position="0.12 0.26 0" radius="0.055" height="0.3" color="#2980B9" material="emissive: #1F3A93; emissiveIntensity: 0.4"></a-cylinder>
+
+                    <!-- Holographic Scan Grid Wireframe around Heart -->
+                    <a-sphere radius="0.65" material="wireframe: true; color: #00D4FF; opacity: 0.35; transparent: true" animation="property: rotation; to: 0 360 360; loop: true; dur: 10000; easing: linear"></a-sphere>
+                </a-entity>
+
+                <!-- Floating Medical Data Text in 3D Space -->
+                <a-text value="BPM: 74 [NORMAL]" position="0 1.25 0" align="center" color="#00E696" width="3" side="double"></a-text>
+                <a-text value="O2 Sat: 99%  |  SYS: 120  |  DIA: 80" position="0 1.1 0" align="center" color="#00D4FF" width="2" side="double"></a-text>
+
+                <!-- Medical Ground Target Ring -->
+                <a-ring rotation="-90 0 0" radius-inner="0.6" radius-outer="0.64" material="color: #00D4FF; opacity: 0.5; transparent: true"></a-ring>
+            </a-entity>
+
+
+            <!-- ======================================================== -->
+            <!-- 🌐 MODEL 3: CYBER HOLOGRAPHIC EARTH & SATELLITE NETWORK  -->
+            <!-- ======================================================== -->
+            <a-entity id="scene-cyber" visible="false" position="0 0.7 0">
+                <!-- Inner Glowing Core Globe -->
                 <a-sphere
-                    position="2.2 0 0"
-                    radius="0.09"
-                    color="#87CEEB"
+                    radius="0.4"
+                    color="#002B5B"
+                    material="roughness: 0.1; emissive: #005B96; emissiveIntensity: 0.6"
+                    animation="property: rotation; to: 0 360 0; loop: true; dur: 16000; easing: linear"
                 ></a-sphere>
-            </a-entity>
 
-            <!-- 🔵 Neptune - orbit 8 -->
-            <a-entity
-                position="0 0.5 0"
-            >
-                <a-animation
-                    attribute="rotation"
-                    dur="30000"
-                    to="0 360 0"
-                    repeat="indefinite"
-                    easing="linear"
-                ></a-animation>
+                <!-- Outer Holographic Wireframe Grid -->
                 <a-sphere
-                    position="2.5 0 0"
-                    radius="0.085"
-                    color="#4682B4"
+                    radius="0.48"
+                    material="wireframe: true; color: #00D4FF; opacity: 0.6; transparent: true"
+                    animation="property: rotation; to: 0 -360 0; loop: true; dur: 12000; easing: linear"
                 ></a-sphere>
+
+                <!-- Satellite Orbit Ring 1 -->
+                <a-ring rotation="45 30 0" radius-inner="0.75" radius-outer="0.77" material="color: #00E696; opacity: 0.5; transparent: true"></a-ring>
+                <a-entity rotation="45 30 0" animation="property: rotation; to: 45 390 0; loop: true; dur: 4500; easing: linear">
+                    <a-box position="0.76 0 0" scale="0.05 0.05 0.05" color="#00E696" material="emissive: #00E696; emissiveIntensity: 1"></a-box>
+                </a-entity>
+
+                <!-- Satellite Orbit Ring 2 -->
+                <a-ring rotation="-45 -30 0" radius-inner="0.95" radius-outer="0.97" material="color: #A855F7; opacity: 0.5; transparent: true"></a-ring>
+                <a-entity rotation="-45 -30 0" animation="property: rotation; to: -45 -390 0; loop: true; dur: 6000; easing: linear">
+                    <a-box position="0.96 0 0" scale="0.06 0.06 0.06" color="#A855F7" material="emissive: #A855F7; emissiveIntensity: 1"></a-box>
+                </a-entity>
+
+                <!-- 3D Holographic Label -->
+                <a-text value="GLOBAL SATELLITE AR NETWORK" position="0 1.25 0" align="center" color="#00D4FF" width="2.8" side="double"></a-text>
+                <a-text value="Real-time Spatial SLAM Coordinate: OK" position="0 1.12 0" align="center" color="#CCDDEE" width="2" side="double"></a-text>
             </a-entity>
 
-            <!-- Ambient light -->
-            <a-light type="ambient" color="#444"></a-light>
-
-            <!-- Point light from the Sun -->
-            <a-light
-                type="point"
-                position="0 0.5 0"
-                intensity="1.5"
-                color="#FDB813"
-                distance="5"
-            ></a-light>
-
+            <!-- General Ambient Lighting -->
+            <a-light type="ambient" color="#667799" intensity="0.8"></a-light>
         </a-marker>
 
         <!-- Camera -->
@@ -275,17 +457,174 @@
     </a-scene>
 
     <script>
-        // Hide loading overlay once camera is ready
-        const scene = document.querySelector('a-scene');
-        scene.addEventListener('loaded', function () {
-            setTimeout(function() {
-                const overlay = document.getElementById('loading-overlay');
-                overlay.style.opacity = '0';
-                setTimeout(function() {
-                    overlay.style.display = 'none';
-                }, 500);
-            }, 2000);
+        // ==========================================
+        // AUDIO SYNTHESIZER (Web Audio API - Zero files needed)
+        // ==========================================
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function playSciFiSound(type) {
+            if (!soundEnabled) return;
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+                if (type === 'found') {
+                    // Upward cyber chirp
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.25);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'switch') {
+                    // Soft UI blip
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(400, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'heart') {
+                    // Low heartbeat thump
+                    osc.frequency.setValueAtTime(90, now);
+                    osc.frequency.exponentialRampToValueAtTime(40, now + 0.18);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                    osc.start(now);
+                    osc.stop(now + 0.18);
+                }
+            } catch(e) {
+                console.log('Audio init postponed:', e);
+            }
+        }
+
+        // ==========================================
+        // MARKER TRACKING EVENTS
+        // ==========================================
+        const marker = document.getElementById('hiro-marker');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const scannerHint = document.getElementById('scanner-hint');
+
+        let markerFoundTime = 0;
+
+        marker.addEventListener('markerFound', () => {
+            statusDot.classList.add('active');
+            statusText.innerText = 'TRACKING 3D TARGET [HIRO]';
+            statusText.style.color = '#00e696';
+            scannerHint.classList.add('hidden');
+            playSciFiSound('found');
         });
+
+        marker.addEventListener('markerLost', () => {
+            statusDot.classList.remove('active');
+            statusText.innerText = 'SCANNING FOR MARKER...';
+            statusText.style.color = '#00d4ff';
+            scannerHint.classList.remove('hidden');
+        });
+
+        // Hide loader when scene is ready
+        document.querySelector('a-scene').addEventListener('loaded', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 600);
+            }, 1200);
+        });
+
+        // ==========================================
+        // INTERACTIVE MODE SWITCHER
+        // ==========================================
+        const descriptions = {
+            solar: {
+                title: "🪐 3D Solar System (Educational AR)",
+                desc: "Demonstrates Marker-Based AR tracking. Sun, orbiting planets with orbital tracks, and Moon revolving around Earth in real time."
+            },
+            heart: {
+                title: "🫀 Medical Anatomy AR (Surgery)",
+                desc: "Demonstrates Superimposition & Medical AR. Beating 3D heart with telemetry vitals, showing how surgeons visualize organs in real space."
+            },
+            cyber: {
+                title: "🌐 Global Geospatial Network",
+                desc: "Demonstrates Markerless SLAM & Spatial Mesh tracking with orbiting satellites and holographic communication nodes."
+            }
+        };
+
+        function switchMode(mode) {
+            playSciFiSound('switch');
+
+            // Hide all scenes
+            document.getElementById('scene-solar').setAttribute('visible', 'false');
+            document.getElementById('scene-heart').setAttribute('visible', 'false');
+            document.getElementById('scene-cyber').setAttribute('visible', 'false');
+
+            // Show selected scene
+            document.getElementById(`scene-${mode}`).setAttribute('visible', 'true');
+
+            // Update buttons
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${mode}`).classList.add('active');
+
+            // Update info card
+            document.getElementById('card-title').innerText = descriptions[mode].title;
+            document.getElementById('card-desc').innerText = descriptions[mode].desc;
+        }
+
+        // ==========================================
+        // SPEED & PLAYBACK CONTROLS
+        // ==========================================
+        let speedMultiplier = 1;
+        let isFrozen = false;
+
+        function toggleSpeed() {
+            playSciFiSound('switch');
+            if (speedMultiplier === 1) speedMultiplier = 2;
+            else if (speedMultiplier === 2) speedMultiplier = 4;
+            else speedMultiplier = 1;
+
+            document.getElementById('btn-speed').innerText = `⚡ Speed: ${speedMultiplier}x`;
+            
+            // Adjust animation durations for all orbits
+            document.querySelectorAll('.orbit').forEach(el => {
+                const currentAnim = el.getAttribute('animation');
+                if (currentAnim) {
+                    const baseDur = parseInt(el.dataset.baseDur || currentAnim.dur);
+                    if (!el.dataset.baseDur) el.dataset.baseDur = baseDur;
+                    el.setAttribute('animation', 'dur', baseDur / speedMultiplier);
+                }
+            });
+        }
+
+        function toggleFreeze() {
+            playSciFiSound('switch');
+            isFrozen = !isFrozen;
+            const btn = document.getElementById('btn-freeze');
+            if (isFrozen) {
+                btn.innerText = '▶️ Resume';
+                btn.classList.add('active');
+                document.querySelector('a-scene').pause();
+            } else {
+                btn.innerText = '⏸️ Pause';
+                btn.classList.remove('active');
+                document.querySelector('a-scene').play();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('btn-sound');
+            btn.innerText = soundEnabled ? '🔊 Audio: ON' : '🔇 Audio: OFF';
+            if (soundEnabled) btn.classList.remove('active');
+            else btn.classList.add('active');
+            if (soundEnabled) playSciFiSound('switch');
+        }
     </script>
 </body>
 </html>
