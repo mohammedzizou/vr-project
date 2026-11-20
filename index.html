@@ -86,17 +86,17 @@
             background: linear-gradient(135deg, #00d4ff 0%, #387aff 100%);
             border-radius: 28px;
             border: none;
-            padding: 12px 26px;
+            padding: 13px 28px;
             font-size: 14px;
             font-weight: 800;
             letter-spacing: 0.5px;
             color: #050b1e;
-            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.45);
             cursor: pointer;
-            display: flex;
+            display: flex !important;
             align-items: center;
             gap: 8px;
-            z-index: 50;
+            z-index: 999;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             white-space: nowrap;
         }
@@ -137,7 +137,8 @@
     </div>
 
     <!-- Google Model Viewer (Markerless True AR) -->
-    <!-- Notice: Exact same robot.glb used in both preview and AR mode -->
+    <!-- Google Model Viewer (Markerless True AR) -->
+    <!-- Exact same robot.glb used in both preview and AR mode -->
     <model-viewer
         id="viewer"
         src="robot.glb"
@@ -155,19 +156,33 @@
         exposure="1.15"
         autoplay
     >
-        <!-- Small, Clean, Perfectly Positioned AR Button -->
-        <button slot="ar-button" id="ar-button">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
-                <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/>
-                <circle cx="12" cy="12" r="3"/>
-            </svg>
-            VIEW IN AR
-        </button>
+        <!-- Internal slot kept for fallback -->
+        <button slot="ar-button" id="hidden-slot-btn" style="display:none;"></button>
     </model-viewer>
+
+    <!-- Always Visible, Small, High-Z-Index AR Button -->
+    <button id="ar-button" onclick="launchAR()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/>
+            <circle cx="12" cy="12" r="3.2"/>
+        </svg>
+        <span>VIEW IN AR</span>
+    </button>
 
     <script>
         const viewer = document.getElementById('viewer');
         const hintText = document.getElementById('hint-text');
+
+        function launchAR() {
+            // Check if viewer has activateAR method
+            if (viewer && typeof viewer.activateAR === 'function') {
+                viewer.activateAR();
+            } else {
+                // Trigger internal slot button
+                const slotBtn = document.getElementById('hidden-slot-btn');
+                if (slotBtn) slotBtn.click();
+            }
+        }
 
         function switchModel(type) {
             document.querySelectorAll('.selector-btn').forEach(b => b.classList.remove('active'));
