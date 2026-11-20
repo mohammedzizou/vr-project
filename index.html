@@ -3,68 +3,76 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Augmented Reality Experience — Master's Degree</title>
-    <!-- Google Model Viewer (Official WebXR, Apple ARKit Quick Look & Android Scene Viewer) -->
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <title>Augmented Reality Spatial Experience</title>
+    <!-- Three.js (r128) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Three.js GLTFLoader for Robot Animation -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
     <style>
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             user-select: none;
             -webkit-user-select: none;
         }
         body {
-            background: radial-gradient(circle at 50% 30%, #0d1b3e 0%, #050b18 100%);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: #ffffff;
-            width: 100vw;
-            height: 100vh;
+            background-color: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            color: #fff;
+            width: 100vw; height: 100vh;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
             position: relative;
         }
 
-        /* 3D Model Viewer Canvas */
-        model-viewer {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            --poster-color: transparent;
+        /* 1. Real-Room Camera Passthrough Feed */
+        #camera-video {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        /* 2. 3D WebGL Canvas Layer */
+        #webgl-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 2;
             outline: none;
         }
 
-        /* Top Bar: Clean Model Switcher */
+        /* 3. Top Mode Switcher Bar */
         header {
             position: absolute;
             top: 16px;
-            left: 0;
-            right: 0;
+            left: 0; right: 0;
             display: flex;
             justify-content: center;
             z-index: 30;
             padding: 0 16px;
+            pointer-events: none;
         }
-        .model-selector {
-            background: rgba(10, 20, 50, 0.88);
-            border: 1px solid rgba(0, 212, 255, 0.35);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+        .mode-selector {
+            background: rgba(12, 18, 42, 0.85);
+            border: 1px solid rgba(0, 212, 255, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-radius: 30px;
             display: flex;
             padding: 4px;
             gap: 4px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+            pointer-events: auto;
         }
         .selector-btn {
             background: transparent;
             border: none;
             color: #b0c4de;
-            padding: 8px 16px;
+            padding: 9px 18px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.25s ease;
@@ -74,136 +82,560 @@
             background: linear-gradient(135deg, #00d4ff, #387aff);
             color: #050b1e;
             font-weight: 800;
-            box-shadow: 0 2px 14px rgba(0, 212, 255, 0.4);
+            box-shadow: 0 2px 14px rgba(0, 212, 255, 0.5);
         }
 
-        /* Clean, Small, Perfectly Placed AR Button */
-        #ar-button {
+        /* 4. Bottom Glass Dock */
+        .bottom-dock {
             position: absolute;
-            bottom: 30px;
+            bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
-            background: linear-gradient(135deg, #00d4ff 0%, #387aff 100%);
-            border-radius: 28px;
-            border: none;
-            padding: 13px 28px;
-            font-size: 14px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            color: #050b1e;
-            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.45);
-            cursor: pointer;
-            display: flex !important;
+            background: rgba(12, 18, 42, 0.82);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 8px 16px;
+            display: flex;
             align-items: center;
-            gap: 8px;
-            z-index: 999;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            gap: 16px;
+            z-index: 30;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+        }
+        .dock-btn {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .dock-btn:active, .dock-btn.active {
+            background: #00d4ff;
+            color: #050b1e;
+            border-color: #00d4ff;
+            transform: scale(1.08);
+        }
+        .hint-pill {
+            font-size: 11.5px;
+            color: #d0e4ff;
             white-space: nowrap;
         }
-        #ar-button:active {
-            transform: translateX(-50%) scale(0.96);
-            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+
+        /* 5. Apple-Style Play/Pause Floating HUD Icon */
+        #playback-indicator {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(10, 20, 50, 0.85);
+            border: 2px solid #00d4ff;
+            backdrop-filter: blur(20px);
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            z-index: 25;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+        #playback-indicator.visible {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.05);
         }
 
-        /* Subtle touch gesture hint */
-        .hint-text {
-            position: absolute;
-            bottom: 78px;
-            left: 0;
-            right: 0;
+        /* 6. Permission / Start Modal */
+        #start-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(5, 10, 25, 0.96);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
             text-align: center;
-            font-size: 11px;
-            color: #7890a8;
-            letter-spacing: 0.3px;
-            pointer-events: none;
-            z-index: 20;
         }
+        .start-card {
+            background: rgba(15, 24, 55, 0.88);
+            border: 1px solid rgba(0, 212, 255, 0.45);
+            backdrop-filter: blur(25px);
+            border-radius: 26px;
+            padding: 32px 24px;
+            max-width: 380px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.85);
+        }
+        .start-card h2 {
+            font-size: 21px;
+            margin: 12px 0 8px 0;
+            color: #00d4ff;
+            font-weight: 700;
+        }
+        .start-card p {
+            font-size: 13px;
+            line-height: 1.55;
+            color: #ccddee;
+            margin-bottom: 24px;
+        }
+        .enter-btn {
+            background: linear-gradient(135deg, #00d4ff, #387aff);
+            color: #050b1a;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.5);
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        .enter-btn:active { transform: scale(0.97); }
+
+        /* Hidden Video Source */
+        #cinema-video { display: none; }
     </style>
 </head>
 <body>
 
-    <!-- Clean Top Model Switcher -->
+    <!-- Camera Feed (Real Room Passthrough) -->
+    <video id="camera-video" autoplay playsinline muted></video>
+
+    <!-- 3D WebGL Canvas Layer -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- HTML5 Video Source for Spatial Cinema -->
+    <video id="cinema-video" loop playsinline webkit-playsinline crossorigin="anonymous" src="ar_screen_video.mp4"></video>
+
+    <!-- Playback Flash Indicator (Play / Pause) -->
+    <div id="playback-indicator">▶️</div>
+
+    <!-- Start / Camera Permission Overlay -->
+    <div id="start-overlay">
+        <div class="start-card">
+            <div style="font-size: 44px; margin-bottom: 4px;">🥽</div>
+            <h2>Augmented Reality Room</h2>
+            <p>Experience real spatial computing in your room. See the <strong>Vision Pro Spatial Cinema Screen</strong> playing video in 3D, and the <strong>Living Cyber Robot</strong> dancing on your floor.</p>
+            <button class="enter-btn" onclick="initARSession()">🚀 Start AR Camera</button>
+        </div>
+    </div>
+
+    <!-- Top Mode Switcher Bar -->
     <header>
-        <div class="model-selector">
-            <button class="selector-btn active" id="btn-robot" onclick="switchModel('robot')">🤖 Cyber Robot</button>
-            <button class="selector-btn" id="btn-screen" onclick="switchModel('screen')">🥽 Vision Pro Screen</button>
-            <button class="selector-btn" id="btn-astro" onclick="switchModel('astro')">🧑‍🚀 Astronaut</button>
+        <div class="mode-selector">
+            <button class="selector-btn active" id="btn-screen" onclick="switchMode('screen')">🥽 Vision Pro Screen</button>
+            <button class="selector-btn" id="btn-robot" onclick="switchMode('robot')">🤖 Cyber Robot</button>
         </div>
     </header>
 
-    <!-- Subtle Gesture Hint -->
-    <div class="hint-text" id="hint-text">
-        Drag to rotate &bull; Pinch to zoom &bull; Tap AR to place in room
+    <!-- Bottom Controls & Hints -->
+    <div class="bottom-dock">
+        <button class="dock-btn active" id="btn-play" onclick="togglePlayPause()" title="Play/Pause">⏸️</button>
+        <button class="dock-btn" id="btn-audio" onclick="toggleAudio()" title="Sound On/Off">🔇</button>
+        <span class="hint-pill" id="dock-hint">Tap screen to Play/Pause &bull; Pinch to zoom</span>
+        <button class="dock-btn" onclick="resetTransform()" title="Recenter">🎯</button>
     </div>
 
-    <!-- Google Model Viewer (Markerless True AR) -->
-    <!-- Google Model Viewer (Markerless True AR) -->
-    <!-- Exact same robot.glb used in both preview and AR mode -->
-    <model-viewer
-        id="viewer"
-        src="robot.glb"
-        ar
-        ar-modes="webxr scene-viewer quick-look"
-        ar-scale="auto"
-        camera-controls
-        touch-action="pan-y"
-        auto-rotate
-        auto-rotate-delay="1500"
-        rotation-per-second="20deg"
-        shadow-intensity="1.5"
-        shadow-softness="0.8"
-        environment-image="neutral"
-        exposure="1.15"
-        autoplay
-    >
-        <!-- Internal slot kept for fallback -->
-        <button slot="ar-button" id="hidden-slot-btn" style="display:none;"></button>
-    </model-viewer>
-
-    <!-- Always Visible, Small, High-Z-Index AR Button -->
-    <button id="ar-button" onclick="launchAR()">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
-            <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/>
-            <circle cx="12" cy="12" r="3.2"/>
-        </svg>
-        <span>VIEW IN AR</span>
-    </button>
-
     <script>
-        const viewer = document.getElementById('viewer');
-        const hintText = document.getElementById('hint-text');
+        // ==============================================================================
+        // 1. CAMERA PASSTHROUGH INITIALIZATION
+        // ==============================================================================
+        const cameraVideo = document.getElementById('camera-video');
+        const cinemaVideo = document.getElementById('cinema-video');
+        const startOverlay = document.getElementById('start-overlay');
+        const playbackIndicator = document.getElementById('playback-indicator');
+        const dockHint = document.getElementById('dock-hint');
 
-        function launchAR() {
-            // Check if viewer has activateAR method
-            if (viewer && typeof viewer.activateAR === 'function') {
-                viewer.activateAR();
-            } else {
-                // Trigger internal slot button
-                const slotBtn = document.getElementById('hidden-slot-btn');
-                if (slotBtn) slotBtn.click();
+        async function initARSession() {
+            try {
+                // Request back camera (environment)
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+                    audio: false
+                });
+                cameraVideo.srcObject = stream;
+                await cameraVideo.play();
+            } catch (err) {
+                console.log("Environment camera fallback:", err);
+                try {
+                    const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    cameraVideo.srcObject = fallbackStream;
+                    await cameraVideo.play();
+                } catch(e) {
+                    cameraVideo.style.display = 'none';
+                    document.body.style.background = 'radial-gradient(circle at center, #101935 0%, #050b18 100%)';
+                }
+            }
+
+            // Start cinema video playback (initially muted for iOS autoplay permission)
+            cinemaVideo.play().catch(e => console.log('Video autoplay:', e));
+
+            // Hide start overlay
+            startOverlay.style.opacity = '0';
+            setTimeout(() => startOverlay.style.display = 'none', 400);
+
+            // Gyroscope tracking (if available on mobile)
+            if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then(state => {
+                    if (state === 'granted') {
+                        window.addEventListener('deviceorientation', onDeviceOrientation);
+                    }
+                }).catch(console.error);
+            } else if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', onDeviceOrientation);
             }
         }
 
-        function switchModel(type) {
+        // ==============================================================================
+        // 2. THREE.JS SPATIAL SCENE SETUP
+        // ==============================================================================
+        const canvas = document.getElementById('webgl-canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0, 3.2);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
+        dirLight.position.set(2, 4, 3);
+        scene.add(dirLight);
+
+        // Parent Spatial Groups
+        const screenRoot = new THREE.Group();
+        const robotRoot = new THREE.Group();
+        scene.add(screenRoot);
+        scene.add(robotRoot);
+        robotRoot.visible = false;
+
+        // ==============================================================================
+        // 3. OBJECT 1: VISION PRO CURVED CINEMA DISPLAY
+        // ==============================================================================
+        const videoTexture = new THREE.VideoTexture(cinemaVideo);
+        videoTexture.minFilter = THREE.LinearFilter;
+        videoTexture.magFilter = THREE.LinearFilter;
+        videoTexture.format = THREE.RGBAFormat;
+
+        const screenW = 2.4;
+        const screenH = 1.35; // 16:9 ratio
+
+        // Curved Cinema Geometry (3D Arc)
+        const curvedScreenGeo = new THREE.CylinderGeometry(2.8, 2.8, screenH, 48, 1, true, -Math.PI / 6, Math.PI / 3);
+        const screenMaterial = new THREE.MeshBasicMaterial({
+            map: videoTexture,
+            side: THREE.DoubleSide
+        });
+        const screenMesh = new THREE.Mesh(curvedScreenGeo, screenMaterial);
+        screenMesh.rotation.y = Math.PI; // Face the camera
+        screenRoot.add(screenMesh);
+
+        // Frosted Glass Bezel (VisionOS aesthetic)
+        const glassBezelMat = new THREE.MeshPhysicalMaterial({
+            color: 0x0a1428,
+            roughness: 0.1,
+            metalness: 0.1,
+            transmission: 0.75,
+            transparent: true,
+            opacity: 0.85,
+            side: THREE.DoubleSide
+        });
+        const glassBezelGeo = new THREE.PlaneGeometry(screenW + 0.12, screenH + 0.12);
+        const glassBezelMesh = new THREE.Mesh(glassBezelGeo, glassBezelMat);
+        glassBezelMesh.position.z = -0.01;
+        screenRoot.add(glassBezelMesh);
+
+        // Glowing Cyan Border
+        const borderMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.45, wireframe: true });
+        const borderMesh = new THREE.Mesh(new THREE.PlaneGeometry(screenW + 0.15, screenH + 0.15), borderMat);
+        borderMesh.position.z = -0.015;
+        screenRoot.add(borderMesh);
+
+        // ==============================================================================
+        // 4. OBJECT 2: CYBER ROBOT WITH 60 FPS DANCE ANIMATION
+        // ==============================================================================
+        let robotMixer = null;
+        const gltfLoader = new THREE.GLTFLoader();
+
+        gltfLoader.load('robot.glb', (gltf) => {
+            const robotModel = gltf.scene;
+            robotModel.position.set(0, -0.9, 0);
+            robotModel.scale.set(0.42, 0.42, 0.42);
+            robotRoot.add(robotModel);
+
+            // Animate using skeletal bones (Dance animation)
+            if (gltf.animations && gltf.animations.length > 0) {
+                robotMixer = new THREE.AnimationMixer(robotModel);
+                // Find 'Dance' animation or fallback to first
+                const danceClip = gltf.animations.find(a => a.name === 'Dance') || gltf.animations[0];
+                const action = robotMixer.clipAction(danceClip);
+                action.play();
+            }
+
+            // Holographic Cyber Pedestal
+            const pedestalMat = new THREE.MeshStandardMaterial({ color: 0x0d1b3e, metalness: 0.8, roughness: 0.2 });
+            const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.85, 0.08, 32), pedestalMat);
+            pedestal.position.set(0, -0.95, 0);
+            robotRoot.add(pedestal);
+
+            // Glowing base ring
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.7 });
+            const ring = new THREE.Mesh(new THREE.RingGeometry(0.75, 0.8, 32), ringMat);
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.set(0, -0.9, 0);
+            robotRoot.add(ring);
+        }, undefined, (err) => console.log('Robot load note:', err));
+
+        // ==============================================================================
+        // 5. TOUCH & GESTURE CONTROLS (TAP TO PLAY/PAUSE, PINCH ZOOM, ROTATION)
+        // ==============================================================================
+        let currentMode = 'screen'; // 'screen' or 'robot'
+        let isTouching = false;
+        let startX = 0, startY = 0;
+        let prevTouchX = 0, prevTouchY = 0;
+        let targetRotY = 0, targetRotX = 0;
+        let startPinchDist = 0;
+        let screenScale = 1;
+        let robotScale = 1;
+
+        function getActiveRoot() {
+            return (currentMode === 'screen') ? screenRoot : robotRoot;
+        }
+
+        // Tap vs Drag detection
+        let touchMoveDistance = 0;
+
+        window.addEventListener('touchstart', (e) => {
+            if (e.target.closest('header') || e.target.closest('.bottom-dock') || e.target.closest('#start-overlay')) return;
+
+            if (e.touches.length === 1) {
+                isTouching = true;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                prevTouchX = startX;
+                prevTouchY = startY;
+                touchMoveDistance = 0;
+            } else if (e.touches.length === 2) {
+                isTouching = false;
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                startPinchDist = Math.hypot(dx, dy);
+            }
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.target.closest('header') || e.target.closest('.bottom-dock')) return;
+
+            if (e.touches.length === 1 && isTouching) {
+                const deltaX = e.touches[0].clientX - prevTouchX;
+                const deltaY = e.touches[0].clientY - prevTouchY;
+                touchMoveDistance += Math.hypot(deltaX, deltaY);
+
+                targetRotY += deltaX * 0.007;
+                targetRotX += deltaY * 0.007;
+                prevTouchX = e.touches[0].clientX;
+                prevTouchY = e.touches[0].clientY;
+            } else if (e.touches.length === 2 && startPinchDist > 0) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const currentDist = Math.hypot(dx, dy);
+                const factor = currentDist / startPinchDist;
+
+                if (currentMode === 'screen') {
+                    screenScale = Math.min(Math.max(screenScale * factor, 0.35), 2.8);
+                    screenRoot.scale.set(screenScale, screenScale, screenScale);
+                } else {
+                    robotScale = Math.min(Math.max(robotScale * factor, 0.4), 2.5);
+                    robotRoot.scale.set(robotScale, robotScale, robotScale);
+                }
+                startPinchDist = currentDist;
+            }
+        });
+
+        window.addEventListener('touchend', (e) => {
+            if (!isTouching) return;
+            isTouching = false;
+
+            // If finger barely moved (< 12px), it's a TAP!
+            if (touchMoveDistance < 12) {
+                if (currentMode === 'screen') {
+                    togglePlayPause();
+                }
+            }
+        });
+
+        // Desktop mouse support
+        let isMouseDown = false;
+        window.addEventListener('mousedown', (e) => {
+            if (e.target.closest('header') || e.target.closest('.bottom-dock') || e.target.closest('#start-overlay')) return;
+            isMouseDown = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            prevTouchX = startX;
+            prevTouchY = startY;
+            touchMoveDistance = 0;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isMouseDown) return;
+            const deltaX = e.clientX - prevTouchX;
+            const deltaY = e.clientY - prevTouchY;
+            touchMoveDistance += Math.hypot(deltaX, deltaY);
+            targetRotY += deltaX * 0.006;
+            targetRotX += deltaY * 0.006;
+            prevTouchX = e.clientX;
+            prevTouchY = e.clientY;
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (!isMouseDown) return;
+            isMouseDown = false;
+            if (touchMoveDistance < 10 && currentMode === 'screen') {
+                togglePlayPause();
+            }
+        });
+
+        // Mouse scroll wheel zoom
+        window.addEventListener('wheel', (e) => {
+            const factor = e.deltaY > 0 ? 0.92 : 1.08;
+            if (currentMode === 'screen') {
+                screenScale = Math.min(Math.max(screenScale * factor, 0.35), 2.8);
+                screenRoot.scale.set(screenScale, screenScale, screenScale);
+            } else {
+                robotScale = Math.min(Math.max(robotScale * factor, 0.4), 2.5);
+                robotRoot.scale.set(robotScale, robotScale, robotScale);
+            }
+        });
+
+        // Subtle Device Gyroscope motion for true 3D spatial feel
+        function onDeviceOrientation(e) {
+            if (e.gamma !== null && e.beta !== null) {
+                const gyroX = (e.gamma / 90) * 0.25;
+                const gyroY = ((e.beta - 45) / 90) * 0.25;
+                camera.position.x += (gyroX - camera.position.x) * 0.05;
+                camera.position.y += (-gyroY - camera.position.y) * 0.05;
+            }
+        }
+
+        // ==============================================================================
+        // 6. VIDEO PLAY / PAUSE & AUDIO CONTROLS
+        // ==============================================================================
+        function togglePlayPause() {
+            const btnPlay = document.getElementById('btn-play');
+            if (cinemaVideo.paused) {
+                cinemaVideo.play();
+                btnPlay.innerText = '⏸️';
+                btnPlay.classList.add('active');
+                showIndicator('▶️');
+            } else {
+                cinemaVideo.pause();
+                btnPlay.innerText = '▶️';
+                btnPlay.classList.remove('active');
+                showIndicator('⏸️');
+            }
+        }
+
+        function toggleAudio() {
+            const btnAudio = document.getElementById('btn-audio');
+            cinemaVideo.muted = !cinemaVideo.muted;
+            btnAudio.innerText = cinemaVideo.muted ? '🔇' : '🔊';
+            btnAudio.classList.toggle('active', !cinemaVideo.muted);
+        }
+
+        function showIndicator(icon) {
+            playbackIndicator.innerText = icon;
+            playbackIndicator.classList.add('visible');
+            setTimeout(() => playbackIndicator.classList.remove('visible'), 500);
+        }
+
+        function resetTransform() {
+            targetRotX = 0;
+            targetRotY = 0;
+            screenRoot.rotation.set(0, 0, 0);
+            robotRoot.rotation.set(0, 0, 0);
+            screenScale = 1;
+            robotScale = 1;
+            screenRoot.scale.set(1, 1, 1);
+            robotRoot.scale.set(1, 1, 1);
+            camera.position.set(0, 0, 3.2);
+        }
+
+        // ==============================================================================
+        // 7. MODE SWITCHER (VISION PRO SCREEN vs CYBER ROBOT)
+        // ==============================================================================
+        function switchMode(mode) {
+            currentMode = mode;
             document.querySelectorAll('.selector-btn').forEach(b => b.classList.remove('active'));
 
-            if (type === 'robot') {
-                viewer.src = 'robot.glb';
-                viewer.removeAttribute('ios-src'); // Ensures exact same robot in UI and AR
-                document.getElementById('btn-robot').classList.add('active');
-                hintText.innerHTML = 'Drag to rotate &bull; Pinch to zoom &bull; Tap AR to place in room';
-            } else if (type === 'screen') {
-                viewer.src = 'vision_screen.glb';
-                viewer.removeAttribute('ios-src');
+            if (mode === 'screen') {
+                screenRoot.visible = true;
+                robotRoot.visible = false;
                 document.getElementById('btn-screen').classList.add('active');
-                hintText.innerHTML = 'Vision Pro Spatial Display &bull; Walk around screen 360° in AR';
-            } else if (type === 'astro') {
-                viewer.src = 'astronaut.glb';
-                viewer.removeAttribute('ios-src');
-                document.getElementById('btn-astro').classList.add('active');
-                hintText.innerHTML = 'NASA Apollo Space Suit &bull; Tap AR to inspect up close';
+                document.getElementById('btn-play').style.display = 'flex';
+                document.getElementById('btn-audio').style.display = 'flex';
+                dockHint.innerText = 'Tap screen to Play/Pause • Pinch to zoom';
+            } else {
+                screenRoot.visible = false;
+                robotRoot.visible = true;
+                document.getElementById('btn-robot').classList.add('active');
+                document.getElementById('btn-play').style.display = 'none';
+                document.getElementById('btn-audio').style.display = 'none';
+                dockHint.innerText = 'Robot dancing in 60 FPS • Drag to rotate';
             }
+            resetTransform();
         }
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ==============================================================================
+        // 8. 60 FPS RENDER LOOP
+        // ==============================================================================
+        const clock = new THREE.Clock();
+
+        function renderLoop() {
+            requestAnimationFrame(renderLoop);
+
+            const delta = clock.getDelta();
+            const elapsedTime = clock.getElapsedTime();
+
+            // Update skeletal robot animation
+            if (robotMixer) {
+                robotMixer.update(delta);
+            }
+
+            // Smooth rotation interpolation on active object
+            const activeGroup = getActiveRoot();
+            activeGroup.rotation.y += (targetRotY - activeGroup.rotation.y) * 0.12;
+            activeGroup.rotation.x += (targetRotX - activeGroup.rotation.x) * 0.12;
+
+            // Subtle VisionOS floating hover motion
+            if (currentMode === 'screen') {
+                screenRoot.position.y = Math.sin(elapsedTime * 1.6) * 0.035;
+                borderMat.opacity = 0.35 + Math.sin(elapsedTime * 3) * 0.15;
+            }
+
+            renderer.render(scene, camera);
+        }
+        renderLoop();
     </script>
 </body>
 </html>
