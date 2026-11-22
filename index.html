@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Augmented Reality Experience — Master's Degree</title>
+    <title>AI & Augmented Reality — Interactive WebAR</title>
     <!-- Google Model Viewer (Official WebXR, Apple ARKit Quick Look & Android Scene Viewer) -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
@@ -16,9 +16,9 @@
             -webkit-user-select: none;
         }
         body {
-            background: radial-gradient(circle at 50% 30%, #0d1b3e 0%, #050b18 100%);
+            background: #F8FAFC;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: #ffffff;
+            color: #0F172A;
             width: 100vw;
             height: 100vh;
             overflow: hidden;
@@ -36,62 +36,94 @@
             outline: none;
         }
 
-        /* Top Bar: Clean Model Switcher */
+        /* Top Bar: Clean AI Status & Model Switcher */
         header {
             position: absolute;
-            top: 16px;
+            top: 14px;
             left: 0;
             right: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
             z-index: 30;
             padding: 0 16px;
         }
+
+        /* AI Vision Tracking Badge */
+        .ai-badge {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid #CBD5E1;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #2563EB;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.3px;
+        }
+        .ai-pulse {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #059669;
+            box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7);
+            animation: pulse 1.8s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+        }
+
         .model-selector {
-            background: rgba(10, 20, 50, 0.88);
-            border: 1px solid rgba(0, 212, 255, 0.35);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #E2E8F0;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 30px;
             display: flex;
             padding: 4px;
-            gap: 4px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            gap: 6px;
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
         }
         .selector-btn {
             background: transparent;
             border: none;
-            color: #b0c4de;
-            padding: 8px 16px;
+            color: #64748B;
+            padding: 8px 18px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.25s ease;
+            transition: all 0.2s ease;
             white-space: nowrap;
         }
         .selector-btn.active {
-            background: linear-gradient(135deg, #00d4ff, #387aff);
-            color: #050b1e;
-            font-weight: 800;
-            box-shadow: 0 2px 14px rgba(0, 212, 255, 0.4);
+            background: #2563EB;
+            color: #FFFFFF;
+            font-weight: 700;
+            box-shadow: 0 3px 12px rgba(37, 99, 235, 0.35);
         }
 
-        /* Clean, Small, Perfectly Placed AR Button */
+        /* Clean, Small, High-Contrast AR Button */
         #ar-button {
             position: absolute;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: linear-gradient(135deg, #00d4ff 0%, #387aff 100%);
-            border-radius: 28px;
+            background: #059669;
+            border-radius: 30px;
             border: none;
             padding: 13px 28px;
             font-size: 14px;
-            font-weight: 800;
+            font-weight: 700;
             letter-spacing: 0.5px;
-            color: #050b1e;
-            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.45);
+            color: #FFFFFF;
+            box-shadow: 0 8px 24px rgba(5, 150, 105, 0.35);
             cursor: pointer;
             display: flex !important;
             align-items: center;
@@ -102,43 +134,53 @@
         }
         #ar-button:active {
             transform: translateX(-50%) scale(0.96);
-            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
         }
 
-        /* Subtle touch gesture hint */
-        .hint-text {
+        /* Explanatory gesture and AI info hint */
+        .info-card {
             position: absolute;
-            bottom: 78px;
-            left: 0;
-            right: 0;
+            bottom: 84px;
+            left: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid #E2E8F0;
+            border-radius: 14px;
+            padding: 10px 14px;
             text-align: center;
             font-size: 11px;
-            color: #7890a8;
-            letter-spacing: 0.3px;
+            color: #475569;
+            line-height: 1.4;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
             pointer-events: none;
             z-index: 20;
+        }
+        .info-card strong {
+            color: #0F172A;
         }
     </style>
 </head>
 <body>
 
-    <!-- Clean Top Model Switcher -->
+    <!-- Header with AI Status & Model Selection -->
     <header>
+        <div class="ai-badge">
+            <span class="ai-pulse"></span>
+            <span>AI Computer Vision: Surface SLAM Active</span>
+        </div>
         <div class="model-selector">
-            <button class="selector-btn active" id="btn-robot" onclick="switchModel('robot')">🤖 Cyber Robot</button>
-            <button class="selector-btn" id="btn-screen" onclick="switchModel('screen')">🥽 Vision Pro Screen</button>
-            <button class="selector-btn" id="btn-astro" onclick="switchModel('astro')">🧑‍🚀 Astronaut</button>
+            <button class="selector-btn active" id="btn-robot" onclick="switchModel('robot')">🤖 Autonomous Robot</button>
+            <button class="selector-btn" id="btn-astro" onclick="switchModel('astro')">🧑‍🚀 Spatial Science</button>
         </div>
     </header>
 
-    <!-- Subtle Gesture Hint -->
-    <div class="hint-text" id="hint-text">
-        Drag to rotate &bull; Pinch to zoom &bull; Tap AR to place in room
+    <!-- Info Banner for Students -->
+    <div class="info-card" id="info-card">
+        <strong>Markerless AI Tracking:</strong> Pinch to zoom &bull; Drag to rotate 360°<br>
+        Tap <strong>"VIEW IN AR"</strong> to anchor in your classroom floor.
     </div>
 
-    <!-- Google Model Viewer (Markerless True AR) -->
-    <!-- Google Model Viewer (Markerless True AR) -->
-    <!-- Exact same robot.glb used in both preview and AR mode -->
+    <!-- Google Model Viewer (Markerless True AR with AI SLAM) -->
     <model-viewer
         id="viewer"
         src="robot.glb"
@@ -150,35 +192,32 @@
         auto-rotate
         auto-rotate-delay="1500"
         rotation-per-second="20deg"
-        shadow-intensity="1.5"
+        shadow-intensity="1.2"
         shadow-softness="0.8"
         environment-image="neutral"
-        exposure="1.15"
+        exposure="1.05"
         autoplay
     >
-        <!-- Internal slot kept for fallback -->
         <button slot="ar-button" id="hidden-slot-btn" style="display:none;"></button>
     </model-viewer>
 
-    <!-- Always Visible, Small, High-Z-Index AR Button -->
+    <!-- Visible AR Button for Mobile Devices -->
     <button id="ar-button" onclick="launchAR()">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
             <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/>
             <circle cx="12" cy="12" r="3.2"/>
         </svg>
-        <span>VIEW IN AR</span>
+        <span>VIEW IN AR (NO MARKER)</span>
     </button>
 
     <script>
         const viewer = document.getElementById('viewer');
-        const hintText = document.getElementById('hint-text');
+        const infoCard = document.getElementById('info-card');
 
         function launchAR() {
-            // Check if viewer has activateAR method
             if (viewer && typeof viewer.activateAR === 'function') {
                 viewer.activateAR();
             } else {
-                // Trigger internal slot button
                 const slotBtn = document.getElementById('hidden-slot-btn');
                 if (slotBtn) slotBtn.click();
             }
@@ -189,19 +228,14 @@
 
             if (type === 'robot') {
                 viewer.src = 'robot.glb';
-                viewer.removeAttribute('ios-src'); // Ensures exact same robot in UI and AR
-                document.getElementById('btn-robot').classList.add('active');
-                hintText.innerHTML = 'Drag to rotate &bull; Pinch to zoom &bull; Tap AR to place in room';
-            } else if (type === 'screen') {
-                viewer.src = 'vision_screen.glb';
                 viewer.removeAttribute('ios-src');
-                document.getElementById('btn-screen').classList.add('active');
-                hintText.innerHTML = 'Vision Pro Spatial Display &bull; Walk around screen 360° in AR';
+                document.getElementById('btn-robot').classList.add('active');
+                infoCard.innerHTML = '<strong>Example 1: Autonomous Robotics:</strong> Point camera at the floor.<br>AI SLAM tracks the surface and places the robot.';
             } else if (type === 'astro') {
                 viewer.src = 'astronaut.glb';
                 viewer.removeAttribute('ios-src');
                 document.getElementById('btn-astro').classList.add('active');
-                hintText.innerHTML = 'NASA Apollo Space Suit &bull; Tap AR to inspect up close';
+                infoCard.innerHTML = '<strong>Example 2: Education & Space Science:</strong> Walk around the 3D astronaut.<br>Computer Vision maintains 60 FPS scale and orientation.';
             }
         }
     </script>
