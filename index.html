@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AI & Augmented Reality — Interactive WebAR</title>
     <!-- Google Model Viewer (Official WebXR, Apple ARKit Quick Look & Android Scene Viewer) -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
@@ -15,31 +15,53 @@
             user-select: none;
             -webkit-user-select: none;
         }
+
+        :root {
+            --app-height: 100%;
+        }
+
+        html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #F8FAFC;
+        }
+
         body {
             background: #F8FAFC;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             color: #0F172A;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            height: calc(var(--vh, 1vh) * 100);
+            min-height: -webkit-fill-available;
             overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             display: flex;
             flex-direction: column;
-            position: relative;
         }
 
         /* 3D Model Viewer Canvas */
         model-viewer {
-            flex: 1;
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             --poster-color: transparent;
             outline: none;
+            z-index: 1;
         }
 
         /* Top Bar: Clean AI Status & Model Switcher */
         header {
-            position: absolute;
-            top: 14px;
+            position: fixed;
+            top: max(12px, env(safe-area-inset-top, 12px));
             left: 0;
             right: 0;
             display: flex;
@@ -48,13 +70,17 @@
             gap: 8px;
             z-index: 30;
             padding: 0 16px;
+            pointer-events: none;
         }
 
         /* AI Vision Tracking Badge */
         .ai-badge {
-            background: rgba(255, 255, 255, 0.92);
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.94);
             border: 1px solid #CBD5E1;
             box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 20px;
             padding: 5px 14px;
             font-size: 11px;
@@ -80,6 +106,7 @@
         }
 
         .model-selector {
+            pointer-events: auto;
             background: rgba(255, 255, 255, 0.95);
             border: 1px solid #E2E8F0;
             backdrop-filter: blur(12px);
@@ -94,9 +121,9 @@
             background: transparent;
             border: none;
             color: #64748B;
-            padding: 8px 18px;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -109,54 +136,93 @@
             box-shadow: 0 3px 12px rgba(37, 99, 235, 0.35);
         }
 
-        /* Clean, Small, High-Contrast AR Button */
-        #ar-button {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #059669;
-            border-radius: 30px;
-            border: none;
-            padding: 13px 28px;
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            color: #FFFFFF;
-            box-shadow: 0 8px 24px rgba(5, 150, 105, 0.35);
-            cursor: pointer;
-            display: flex !important;
+        /* Dedicated Responsive Bottom Control Area */
+        .bottom-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 8px;
-            z-index: 999;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            white-space: nowrap;
-        }
-        #ar-button:active {
-            transform: translateX(-50%) scale(0.96);
-            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+            gap: 10px;
+            padding: 0 16px;
+            padding-bottom: max(18px, env(safe-area-inset-bottom, 18px));
+            z-index: 100;
+            pointer-events: none;
         }
 
-        /* Explanatory gesture and AI info hint */
+        /* Explanatory gesture and AI info card */
         .info-card {
-            position: absolute;
-            bottom: 84px;
-            left: 16px;
-            right: 16px;
-            background: rgba(255, 255, 255, 0.92);
-            border: 1px solid #E2E8F0;
+            pointer-events: auto;
+            width: 100%;
+            max-width: 390px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid #CBD5E1;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 14px;
-            padding: 10px 14px;
+            padding: 8px 14px;
             text-align: center;
             font-size: 11px;
             color: #475569;
             line-height: 1.4;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
-            pointer-events: none;
-            z-index: 20;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
         }
         .info-card strong {
             color: #0F172A;
+        }
+
+        /* Always-Visible, Mobile-Optimized AR Button */
+        #ar-button {
+            pointer-events: auto;
+            background: #059669;
+            border-radius: 30px;
+            border: none;
+            padding: 12px 28px;
+            font-size: 13.5px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #FFFFFF;
+            box-shadow: 0 6px 22px rgba(5, 150, 105, 0.4);
+            cursor: pointer;
+            display: flex !important;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            white-space: nowrap;
+        }
+        #ar-button:active {
+            transform: scale(0.96);
+            box-shadow: 0 3px 10px rgba(5, 150, 105, 0.3);
+        }
+
+        /* Compact adaptations for small devices (e.g., iPhone SE or landscape) */
+        @media (max-height: 650px) {
+            header {
+                top: 8px;
+                gap: 4px;
+            }
+            .ai-badge {
+                font-size: 10px;
+                padding: 3px 10px;
+            }
+            .selector-btn {
+                font-size: 11px;
+                padding: 6px 12px;
+            }
+            .bottom-area {
+                gap: 6px;
+                padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+            }
+            .info-card {
+                font-size: 10px;
+                padding: 5px 10px;
+            }
+            #ar-button {
+                padding: 10px 22px;
+                font-size: 12.5px;
+            }
         }
     </style>
 </head>
@@ -173,12 +239,6 @@
             <button class="selector-btn" id="btn-astro" onclick="switchModel('astro')">🧑‍🚀 Spatial Science</button>
         </div>
     </header>
-
-    <!-- Info Banner for Students -->
-    <div class="info-card" id="info-card">
-        <strong>Markerless AI Tracking:</strong> Pinch to zoom &bull; Drag to rotate 360°<br>
-        Tap <strong>"VIEW IN AR"</strong> to anchor in your classroom floor.
-    </div>
 
     <!-- Google Model Viewer (Markerless True AR with AI SLAM) -->
     <model-viewer
@@ -201,18 +261,34 @@
         <button slot="ar-button" id="hidden-slot-btn" style="display:none;"></button>
     </model-viewer>
 
-    <!-- Visible AR Button for Mobile Devices -->
-    <button id="ar-button" onclick="launchAR()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
-            <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/>
-            <circle cx="12" cy="12" r="3.2"/>
-        </svg>
-        <span>VIEW IN AR (NO MARKER)</span>
-    </button>
+    <!-- Dedicated Responsive Bottom Area: Guarantees button is fully above Chrome/Safari bars -->
+    <div class="bottom-area">
+        <div class="info-card" id="info-card">
+            <strong>Markerless AI Tracking:</strong> Pinch to zoom &bull; Drag to rotate 360°<br>
+            Tap <strong>"VIEW IN AR"</strong> to anchor in your classroom floor.
+        </div>
+        <button id="ar-button" onclick="launchAR()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+                <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/>
+                <circle cx="12" cy="12" r="3.2"/>
+            </svg>
+            <span>VIEW IN AR (NO MARKER)</span>
+        </button>
+    </div>
 
     <script>
         const viewer = document.getElementById('viewer');
         const infoCard = document.getElementById('info-card');
+
+        // Dynamic Viewport Height calculation for mobile Chrome & Safari navigation bars
+        function updateViewportHeight() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        window.addEventListener('resize', updateViewportHeight);
+        window.addEventListener('orientationchange', updateViewportHeight);
+        window.addEventListener('DOMContentLoaded', updateViewportHeight);
+        updateViewportHeight();
 
         function launchAR() {
             if (viewer && typeof viewer.activateAR === 'function') {
