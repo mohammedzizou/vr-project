@@ -403,11 +403,25 @@
             </div>
         </button>
 
-        <!-- Dimension Chips for Spatial Measure Mode -->
-        <button class="hotspot" id="hs-ruler-w" slot="hotspot-w" data-position="0 0.9 0" data-normal="0 1 0" style="display:none;">
+        <!-- Point-to-Point Measurement Hotspots for Spatial Measure Mode -->
+        <button class="hotspot" id="hs-ruler-a" slot="hotspot-point-a" data-position="0 0.08 -0.08" data-normal="0 1 0" style="display:none;" onclick="toggleHotspot(this)">
             <div class="hotspot-card" style="display:block;">
-                <strong>↔ Width: 84 cm (0.84 m)</strong>
-                AI Point-to-Point Laser Calculation
+                <strong style="color:#38BDF8;">📍 Point A (Laser Origin)</strong>
+                Coordinates: (0.00, 0.00, 0.00) m
+            </div>
+        </button>
+
+        <button class="hotspot" id="hs-ruler-dist" slot="hotspot-point-dist" data-position="0 0.08 0.52" data-normal="0 1 0" style="display:none;" onclick="toggleHotspot(this)">
+            <div class="hotspot-card" style="display:block; background:rgba(37,99,235,0.95); border:1px solid #60A5FA;">
+                <strong style="color:#FFFFFF; font-size:12px;">📏 D = 1.000 m (100.0 cm)</strong>
+                Formula: D = √(Δx² + Δy² + Δz²)
+            </div>
+        </button>
+
+        <button class="hotspot" id="hs-ruler-b" slot="hotspot-point-b" data-position="0 0.16 1.02" data-normal="0 1 0" style="display:none;" onclick="toggleHotspot(this)">
+            <div class="hotspot-card" style="display:block;">
+                <strong style="color:#EF4444;">🎯 Point B (Target Reflector)</strong>
+                Coordinates: (0.00, 0.00, 1.00) m
             </div>
         </button>
 
@@ -427,11 +441,11 @@
             <button class="color-dot" style="background:#334155;" title="Charcoal" onclick="setChairColor([0.20, 0.25, 0.33], this)"></button>
         </div>
 
-        <!-- Metric Dimension Chips (Shown only in Spatial Ruler mode) -->
+        <!-- Metric Point-to-Point Distance Calculation Chips -->
         <div class="ruler-chips" id="ruler-chips">
-            <div class="ruler-chip"><span>↔ Width:</span> 84 cm</div>
-            <div class="ruler-chip"><span>↕ Height:</span> 95 cm</div>
-            <div class="ruler-chip"><span>⤢ Depth:</span> 80 cm</div>
+            <div class="ruler-chip"><span style="color:#38BDF8;">📍 Point A:</span> (0.00, 0.00) m</div>
+            <div class="ruler-chip" style="background:#047857; color:#FFFFFF;"><span style="color:#A7F3D0;">📏 D:</span> 100.0 cm (1.00 m)</div>
+            <div class="ruler-chip"><span style="color:#F87171;">🎯 Point B:</span> (0.00, 1.00) m</div>
         </div>
 
         <!-- Info Description Banner -->
@@ -534,14 +548,16 @@
                 infoCard.innerHTML = '<strong>Example 3: Retail Customizer:</strong> Tap colors below to change fabric.<br>Open AR to test if it physically fits through your door.';
 
             } else if (type === 'ruler') {
-                viewer.src = 'chair.glb';
+                viewer.src = 'laser_ruler.glb';
                 viewer.removeAttribute('ios-src');
-                viewer.setAttribute('camera-orbit', '30deg 70deg 105%');
+                viewer.setAttribute('camera-orbit', '45deg 55deg 105%');
                 document.getElementById('btn-ruler').classList.add('active');
                 rulerChips.classList.add('visible');
-                aiStatus.innerText = 'AI SLAM: Real-Time Distance Calculation (cm)';
-                infoCard.innerHTML = '<strong>Example 4: AI Spatial Ruler:</strong> Point-to-point laser calculation.<br>D = √(Δx² + Δy² + Δz²) — calculates millimeter space in your room.';
-                document.getElementById('hs-ruler-w').style.display = 'block';
+                aiStatus.innerText = 'AI SLAM: Point-to-Point Distance Calculation Active';
+                infoCard.innerHTML = '<strong>Example 4: AI Spatial Distance Calculator:</strong><br>Calculates space between Point A (Laser Origin) and Point B (Target).<br>Tap <strong>"VIEW IN AR"</strong> to measure across your classroom floor!';
+                document.getElementById('hs-ruler-a').style.display = 'block';
+                document.getElementById('hs-ruler-b').style.display = 'block';
+                document.getElementById('hs-ruler-dist').style.display = 'block';
             }
         }
     </script>
