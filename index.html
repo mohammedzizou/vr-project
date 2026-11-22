@@ -328,6 +328,7 @@
     <model-viewer
         id="viewer"
         src="heart.glb"
+        scale="0.3 0.3 0.3"
         ar
         ar-modes="webxr scene-viewer quick-look"
         ar-scale="auto"
@@ -461,6 +462,9 @@
         function switchModel(type) {
             document.querySelectorAll('.selector-btn').forEach(b => b.classList.remove('active'));
             colorPalette.classList.remove('visible');
+
+            // Ensure 30% initial scale across all models in AR mode
+            viewer.setAttribute('scale', '0.3 0.3 0.3');
 
             // Hide all hotspots by default
             document.querySelectorAll('.hotspot').forEach(h => h.style.display = 'none');
