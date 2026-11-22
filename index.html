@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI & Augmented Reality — Interactive WebAR</title>
+    <title>AI & Augmented Reality — 4 Interactive WebAR Examples</title>
     <!-- Google Model Viewer (Official WebXR, Apple ARKit Quick Look & Android Scene Viewer) -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
@@ -14,10 +14,6 @@
             padding: 0;
             user-select: none;
             -webkit-user-select: none;
-        }
-
-        :root {
-            --app-height: 100%;
         }
 
         html {
@@ -61,15 +57,15 @@
         /* Top Bar: Clean AI Status & Model Switcher */
         header {
             position: fixed;
-            top: max(12px, env(safe-area-inset-top, 12px));
+            top: max(10px, env(safe-area-inset-top, 10px));
             left: 0;
             right: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             z-index: 30;
-            padding: 0 16px;
+            padding: 0 12px;
             pointer-events: none;
         }
 
@@ -78,11 +74,11 @@
             pointer-events: auto;
             background: rgba(255, 255, 255, 0.94);
             border: 1px solid #CBD5E1;
-            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-radius: 20px;
-            padding: 5px 14px;
+            padding: 4px 12px;
             font-size: 11px;
             font-weight: 700;
             color: #2563EB;
@@ -105,25 +101,40 @@
             100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
         }
 
-        .model-selector {
+        /* Horizontally scrollable switcher for 4 examples */
+        .model-selector-wrapper {
             pointer-events: auto;
-            background: rgba(255, 255, 255, 0.95);
+            width: 100%;
+            max-width: 520px;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 2px 4px;
+            scrollbar-width: none;
+        }
+        .model-selector-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+        .model-selector {
+            background: rgba(255, 255, 255, 0.96);
             border: 1px solid #E2E8F0;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-radius: 30px;
             display: flex;
-            padding: 4px;
-            gap: 6px;
-            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+            padding: 3px;
+            gap: 4px;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08);
+            white-space: nowrap;
         }
         .selector-btn {
             background: transparent;
             border: none;
             color: #64748B;
-            padding: 8px 16px;
+            padding: 7px 13px;
             border-radius: 20px;
-            font-size: 12.5px;
+            font-size: 11.5px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -133,10 +144,124 @@
             background: #2563EB;
             color: #FFFFFF;
             font-weight: 700;
-            box-shadow: 0 3px 12px rgba(37, 99, 235, 0.35);
+            box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35);
         }
 
-        /* Dedicated Responsive Bottom Control Area */
+        /* Interactive 3D Hotspot Pins */
+        .hotspot {
+            background: #FFFFFF;
+            border-radius: 50%;
+            border: 2px solid #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25), 0 4px 12px rgba(0, 0, 0, 0.25);
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.2s ease;
+            animation: bounce 2s infinite ease-in-out;
+            outline: none;
+        }
+        .hotspot:active {
+            transform: scale(0.9);
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        .hotspot-card {
+            display: none;
+            position: absolute;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.92);
+            color: #FFFFFF;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            white-space: nowrap;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            line-height: 1.3;
+            text-align: left;
+        }
+        .hotspot-card strong {
+            color: #38BDF8;
+            display: block;
+            font-size: 11px;
+        }
+        .hotspot:hover .hotspot-card,
+        .hotspot:focus .hotspot-card,
+        .hotspot.open .hotspot-card {
+            display: block;
+        }
+
+        /* Real-Time Color Customizer (for Chair mode) */
+        .color-palette {
+            display: none;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #CBD5E1;
+            padding: 6px 14px;
+            border-radius: 30px;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+            pointer-events: auto;
+            align-items: center;
+        }
+        .color-palette.visible {
+            display: flex;
+        }
+        .palette-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            margin-right: 2px;
+        }
+        .color-dot {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            outline: none;
+        }
+        .color-dot:active, .color-dot.active {
+            transform: scale(1.18);
+            border: 2px solid #0F172A;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Dimension Ruler Overlay (for Ruler mode) */
+        .ruler-chips {
+            display: none;
+            gap: 6px;
+            pointer-events: auto;
+        }
+        .ruler-chips.visible {
+            display: flex;
+        }
+        .ruler-chip {
+            background: rgba(15, 23, 42, 0.88);
+            color: #FFFFFF;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 16px;
+            padding: 4px 10px;
+            font-size: 10.5px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        .ruler-chip span {
+            color: #38BDF8;
+        }
+
+        /* Dedicated Responsive Bottom Area */
         .bottom-area {
             position: fixed;
             bottom: 0;
@@ -145,9 +270,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
-            padding: 0 16px;
-            padding-bottom: max(18px, env(safe-area-inset-bottom, 18px));
+            gap: 8px;
+            padding: 0 14px;
+            padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
             z-index: 100;
             pointer-events: none;
         }
@@ -156,17 +281,17 @@
         .info-card {
             pointer-events: auto;
             width: 100%;
-            max-width: 390px;
+            max-width: 420px;
             background: rgba(255, 255, 255, 0.94);
             border: 1px solid #CBD5E1;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-radius: 14px;
-            padding: 8px 14px;
+            padding: 7px 12px;
             text-align: center;
             font-size: 11px;
             color: #475569;
-            line-height: 1.4;
+            line-height: 1.35;
             box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
         }
         .info-card strong {
@@ -197,76 +322,125 @@
             box-shadow: 0 3px 10px rgba(5, 150, 105, 0.3);
         }
 
-        /* Compact adaptations for small devices (e.g., iPhone SE or landscape) */
         @media (max-height: 650px) {
-            header {
-                top: 8px;
-                gap: 4px;
-            }
-            .ai-badge {
-                font-size: 10px;
-                padding: 3px 10px;
-            }
-            .selector-btn {
-                font-size: 11px;
-                padding: 6px 12px;
-            }
-            .bottom-area {
-                gap: 6px;
-                padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
-            }
-            .info-card {
-                font-size: 10px;
-                padding: 5px 10px;
-            }
-            #ar-button {
-                padding: 10px 22px;
-                font-size: 12.5px;
-            }
+            header { top: 6px; gap: 3px; }
+            .ai-badge { font-size: 9.5px; padding: 2px 8px; }
+            .selector-btn { font-size: 10.5px; padding: 5px 10px; }
+            .bottom-area { gap: 5px; padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)); }
+            .info-card { font-size: 10px; padding: 4px 8px; }
+            #ar-button { padding: 9px 20px; font-size: 12px; }
+            .color-dot { width: 22px; height: 22px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header with AI Status & Model Selection -->
+    <!-- Header with AI Status & 4-Model Switcher -->
     <header>
         <div class="ai-badge">
             <span class="ai-pulse"></span>
-            <span>AI Computer Vision: Surface SLAM Active</span>
+            <span id="ai-status">AI Vision: Surface Tracking Active</span>
         </div>
-        <div class="model-selector">
-            <button class="selector-btn active" id="btn-robot" onclick="switchModel('robot')">🤖 Autonomous Robot</button>
-            <button class="selector-btn" id="btn-astro" onclick="switchModel('astro')">🧑‍🚀 Spatial Science</button>
+        <div class="model-selector-wrapper">
+            <div class="model-selector">
+                <button class="selector-btn active" id="btn-heart" onclick="switchModel('heart')">🫀 Medical Heart</button>
+                <button class="selector-btn" id="btn-astro" onclick="switchModel('astro')">🧑‍🚀 Astronaut</button>
+                <button class="selector-btn" id="btn-chair" onclick="switchModel('chair')">🛋️ Retail Chair</button>
+                <button class="selector-btn" id="btn-ruler" onclick="switchModel('ruler')">📏 Spatial Measure</button>
+            </div>
         </div>
     </header>
 
     <!-- Google Model Viewer (Markerless True AR with AI SLAM) -->
     <model-viewer
         id="viewer"
-        src="robot.glb"
+        src="heart.glb"
         ar
         ar-modes="webxr scene-viewer quick-look"
         ar-scale="auto"
         camera-controls
         touch-action="pan-y"
         auto-rotate
-        auto-rotate-delay="1500"
-        rotation-per-second="20deg"
-        shadow-intensity="1.2"
+        auto-rotate-delay="1000"
+        rotation-per-second="25deg"
+        shadow-intensity="1.3"
         shadow-softness="0.8"
         environment-image="neutral"
         exposure="1.05"
         autoplay
     >
+        <!-- Hotspots for Medical Heart -->
+        <button class="hotspot" id="hs-heart-1" slot="hotspot-aorta" data-position="0 0.15 0.05" data-normal="0 1 0" onclick="toggleHotspot(this)">
+            <div class="hotspot-card">
+                <strong>Aorta (Main Artery)</strong>
+                Carries oxygenated blood to body<br>AI Vascular Guidance Active
+            </div>
+        </button>
+        <button class="hotspot" id="hs-heart-2" slot="hotspot-ventricle" data-position="0.05 -0.08 0.08" data-normal="0 0 1" onclick="toggleHotspot(this)">
+            <div class="hotspot-card">
+                <strong>Left Ventricle</strong>
+                Stroke Volume: 70 mL<br>Ejection Fraction: 62% (Normal)
+            </div>
+        </button>
+        <button class="hotspot" id="hs-heart-3" slot="hotspot-rate" data-position="-0.08 0.05 0.06" data-normal="-1 0 0" onclick="toggleHotspot(this)">
+            <div class="hotspot-card">
+                <strong>Cardiac Telemetry</strong>
+                Rate: 72 BPM • Sinus Rhythm<br>3D MRI Superimposition Active
+            </div>
+        </button>
+
+        <!-- Hotspots for Apollo Astronaut -->
+        <button class="hotspot" id="hs-astro-1" slot="hotspot-helmet" data-position="0 1.75 0.22" data-normal="0 0 1" style="display:none;" onclick="toggleHotspot(this)">
+            <div class="hotspot-card">
+                <strong>Gold-Coated Visor</strong>
+                Shields UV and solar radiation<br>Embedded AI Spatial HUD
+            </div>
+        </button>
+        <button class="hotspot" id="hs-astro-2" slot="hotspot-chest" data-position="0 1.25 0.32" data-normal="0 0 1" style="display:none;" onclick="toggleHotspot(this)">
+            <div class="hotspot-card">
+                <strong>PLSS Life Support</strong>
+                Oxygen: 98% • Pressure: 4.3 psi<br>Real-time Biometric Link
+            </div>
+        </button>
+
+        <!-- Dimension Chips for Spatial Measure Mode -->
+        <button class="hotspot" id="hs-ruler-w" slot="hotspot-w" data-position="0 0.9 0" data-normal="0 1 0" style="display:none;">
+            <div class="hotspot-card" style="display:block;">
+                <strong>↔ Width: 84 cm (0.84 m)</strong>
+                AI Point-to-Point Laser Calculation
+            </div>
+        </button>
+
         <button slot="ar-button" id="hidden-slot-btn" style="display:none;"></button>
     </model-viewer>
 
-    <!-- Dedicated Responsive Bottom Area: Guarantees button is fully above Chrome/Safari bars -->
+    <!-- Dedicated Responsive Bottom Area -->
     <div class="bottom-area">
-        <div class="info-card" id="info-card">
-            <strong>Markerless AI Tracking:</strong> Pinch to zoom &bull; Drag to rotate 360°<br>
-            Tap <strong>"VIEW IN AR"</strong> to anchor in your classroom floor.
+
+        <!-- Interactive Color Palette (Shown only in Retail Chair mode) -->
+        <div class="color-palette" id="color-palette">
+            <span class="palette-label">Color:</span>
+            <button class="color-dot active" style="background:#1E3A8A;" title="Navy Velvet" onclick="setChairColor([0.12, 0.23, 0.54], this)"></button>
+            <button class="color-dot" style="background:#047857;" title="Emerald Green" onclick="setChairColor([0.02, 0.47, 0.34], this)"></button>
+            <button class="color-dot" style="background:#B91C1C;" title="Ruby Red" onclick="setChairColor([0.72, 0.11, 0.11], this)"></button>
+            <button class="color-dot" style="background:#B45309;" title="Cognac Leather" onclick="setChairColor([0.70, 0.33, 0.04], this)"></button>
+            <button class="color-dot" style="background:#334155;" title="Charcoal" onclick="setChairColor([0.20, 0.25, 0.33], this)"></button>
         </div>
+
+        <!-- Metric Dimension Chips (Shown only in Spatial Ruler mode) -->
+        <div class="ruler-chips" id="ruler-chips">
+            <div class="ruler-chip"><span>↔ Width:</span> 84 cm</div>
+            <div class="ruler-chip"><span>↕ Height:</span> 95 cm</div>
+            <div class="ruler-chip"><span>⤢ Depth:</span> 80 cm</div>
+        </div>
+
+        <!-- Info Description Banner -->
+        <div class="info-card" id="info-card">
+            <strong>Example 1: Medical AR Surgery:</strong> Tap pins on the heart to inspect anatomy.<br>
+            Tap <strong>"VIEW IN AR"</strong> to project in 3D right in your room.
+        </div>
+
+        <!-- AR Launch Button -->
         <button id="ar-button" onclick="launchAR()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
                 <path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/>
@@ -279,8 +453,11 @@
     <script>
         const viewer = document.getElementById('viewer');
         const infoCard = document.getElementById('info-card');
+        const aiStatus = document.getElementById('ai-status');
+        const colorPalette = document.getElementById('color-palette');
+        const rulerChips = document.getElementById('ruler-chips');
 
-        // Dynamic Viewport Height calculation for mobile Chrome & Safari navigation bars
+        // Dynamic Viewport Height calculation for mobile Chrome & Safari
         function updateViewportHeight() {
             const vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--vh', `${vh}px`);
@@ -299,19 +476,72 @@
             }
         }
 
+        function toggleHotspot(btn) {
+            btn.classList.toggle('open');
+        }
+
+        function setChairColor(rgb, btn) {
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            if (viewer.model && viewer.model.materials) {
+                // Find fabric material in chair.glb
+                const material = viewer.model.materials.find(m => m.name && m.name.toLowerCase().includes('fabric')) || viewer.model.materials[0];
+                if (material && material.pbrMetallicRoughness) {
+                    material.pbrMetallicRoughness.setBaseColorFactor([rgb[0], rgb[1], rgb[2], 1.0]);
+                }
+            }
+        }
+
         function switchModel(type) {
             document.querySelectorAll('.selector-btn').forEach(b => b.classList.remove('active'));
+            colorPalette.classList.remove('visible');
+            rulerChips.classList.remove('visible');
 
-            if (type === 'robot') {
-                viewer.src = 'robot.glb';
+            // Hide all hotspots by default
+            document.querySelectorAll('.hotspot').forEach(h => h.style.display = 'none');
+
+            if (type === 'heart') {
+                viewer.src = 'heart.glb';
                 viewer.removeAttribute('ios-src');
-                document.getElementById('btn-robot').classList.add('active');
-                infoCard.innerHTML = '<strong>Example 1: Autonomous Robotics:</strong> Point camera at the floor.<br>AI SLAM tracks the surface and places the robot.';
+                viewer.setAttribute('camera-orbit', '0deg 75deg 105%');
+                document.getElementById('btn-heart').classList.add('active');
+                aiStatus.innerText = 'Medical Vision: Sub-millimeter Telemetry Active';
+                infoCard.innerHTML = '<strong>Example 1: Medical AR Surgery:</strong> Tap pins on the heart to inspect anatomy.<br>Tap <strong>"VIEW IN AR"</strong> to project in 3D in your room.';
+                // Show heart hotspots
+                document.getElementById('hs-heart-1').style.display = 'block';
+                document.getElementById('hs-heart-2').style.display = 'block';
+                document.getElementById('hs-heart-3').style.display = 'block';
+
             } else if (type === 'astro') {
                 viewer.src = 'astronaut.glb';
                 viewer.removeAttribute('ios-src');
+                viewer.setAttribute('camera-orbit', '0deg 75deg 105%');
                 document.getElementById('btn-astro').classList.add('active');
-                infoCard.innerHTML = '<strong>Example 2: Education & Space Science:</strong> Walk around the 3D astronaut.<br>Computer Vision maintains 60 FPS scale and orientation.';
+                aiStatus.innerText = 'Spatial Science: 3D Inspection Active';
+                infoCard.innerHTML = '<strong>Example 2: Spatial Science:</strong> Walk around the Apollo astronaut.<br>Tap pins on the suit to inspect the helmet HUD and life support.';
+                // Show astronaut hotspots
+                document.getElementById('hs-astro-1').style.display = 'block';
+                document.getElementById('hs-astro-2').style.display = 'block';
+
+            } else if (type === 'chair') {
+                viewer.src = 'chair.glb';
+                viewer.removeAttribute('ios-src');
+                viewer.setAttribute('camera-orbit', '45deg 65deg 105%');
+                document.getElementById('btn-chair').classList.add('active');
+                colorPalette.classList.add('visible');
+                aiStatus.innerText = 'Smart Retail: 1:1 Scale Room Fit Active';
+                infoCard.innerHTML = '<strong>Example 3: Retail Customizer:</strong> Tap colors below to change fabric.<br>Open AR to test if it physically fits through your door.';
+
+            } else if (type === 'ruler') {
+                viewer.src = 'chair.glb';
+                viewer.removeAttribute('ios-src');
+                viewer.setAttribute('camera-orbit', '30deg 70deg 105%');
+                document.getElementById('btn-ruler').classList.add('active');
+                rulerChips.classList.add('visible');
+                aiStatus.innerText = 'AI SLAM: Real-Time Distance Calculation (cm)';
+                infoCard.innerHTML = '<strong>Example 4: AI Spatial Ruler:</strong> Point-to-point laser calculation.<br>D = √(Δx² + Δy² + Δz²) — calculates millimeter space in your room.';
+                document.getElementById('hs-ruler-w').style.display = 'block';
             }
         }
     </script>
